@@ -1,3 +1,5 @@
+without ISR no page will update after first time of generation
+
 **First basic**
 ```js
 const TripDetails = ({ data: trip }) => {
@@ -165,6 +167,8 @@ export default TripDetails;
 
 **fallback blocking**
 
+will not show loading page
+
 ```js
 
 const TripDetails = ({ data: trip }) => {
@@ -192,7 +196,7 @@ export const getStaticPaths = async () => {
 
   return {
     paths,
-    fallback: true
+    fallback: 'blocking'
   }
 }
 
