@@ -1,7 +1,7 @@
 
-```js
+ISR will update page on request after that time on revalidate, it will update only that page which has been request 
 
-ISR will update page on request after that time on revalidate, it will update only that page which has been request
+```js
 
 const TripDetails = ({ data: trip }) => {
 
