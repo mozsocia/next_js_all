@@ -1,3 +1,76 @@
+To use `getStaticPaths` in addition to `getStaticProps` in your Next.js code, you can implement dynamic routing for your pages. Here's a step-by-step guide:
+
+1. **Create a Page with Dynamic Routing**:
+
+   First, create a page file with square brackets in the filename to indicate dynamic routing. For example, create a file named `[slug].js` inside the `pages` directory.
+
+   ```javascript
+   // pages/[slug].js
+   import { getStaticProps, getStaticPaths } from 'next';
+
+   export async function getStaticPaths() {
+     // Fetch a list of possible values for the dynamic route parameter
+     const paths = [
+       { params: { slug: 'page1' } },
+       { params: { slug: 'page2' } },
+       // Add more possible values as needed
+     ];
+
+     return {
+       paths,
+       fallback: false, // Set to 'false' to return a 404 for unknown paths
+     };
+   }
+
+   export async function getStaticProps({ params }) {
+     // Use the 'slug' parameter to fetch data for the specific page
+     const slug = params.slug;
+     // Fetch data for the specified page
+     const data = await fetch(`https://api.example.com/pages/${slug}`);
+     const jsonData = await data.json();
+
+     return {
+       props: {
+         data: jsonData,
+       },
+     };
+   }
+
+   function DynamicPage({ data }) {
+     // Render the data for the dynamic page
+     return (
+       <div>
+         {/* Render your data here */}
+       </div>
+     );
+   }
+
+   export default DynamicPage;
+   ```
+
+   In this example, we're using `[slug].js` to create dynamic routes based on a `slug` parameter.
+
+2. **Define `getStaticPaths` Function**:
+
+   In the code above, the `getStaticPaths` function is used to specify the possible values for the `slug` parameter. These values are returned as an array of `params` objects. You can add as many possible values as needed.
+
+   - `fallback: false`: Setting `fallback` to `false` means that Next.js will return a 404 error for paths that aren't defined in the `paths` array. If you want to enable dynamic routes with fallback behavior, you can set `fallback` to `'blocking'` or `true`.
+
+3. **Use the Data in Your Component**:
+
+   You can access the `data` prop in the `DynamicPage` component to render the data specific to each dynamic route.
+
+4. **Build and Start the Development Server**:
+
+   Build your Next.js project using `next build` and start the development server with `next start`.
+
+Now, your Next.js application will generate static pages based on the dynamic routes defined in `getStaticPaths`. When a user accesses a URL like `/page1`, Next.js will pre-render the page using the `getStaticProps` function with the corresponding `slug` parameter.
+
+
+=========================
+=========================
+
+
 without ISR no page will update after first time of generation
 
 **First basic**
