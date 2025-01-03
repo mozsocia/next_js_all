@@ -219,4 +219,201 @@ This structure provides several benefits:
 5. Better code organization for team collaboration
 6. Type safety across the feature boundary
 
-Would you like me to show how to implement another feature or explain any part in more detail?
+
+---  
+**Q:i want to use same 'createUserSchema' to used by both ui and api to validate data so type safety will be more robust**
+
+
+I'll modify the structure to share validation schemas between frontend and API. This ensures type safety and consistent validation:
+
+```typescript
+// src/features/users/schemas.ts
+import { z } from 'zod'
+
+export const createUserSchema = z.object({
+  name: z.string()
+    .min(2, 'Name must be at least 2 characters')
+    .max(50, 'Name must be less than 50 characters'),
+  email: z.string()
+    .email('Invalid email format')
+    .toLowerCase(),
+})
+
+// Infer TypeScript type from schema
+export type CreateUserDto = z.infer<typeof createUserSchema>
+```
+
+Now let's use this shared schema in both API and UI:
+
+```typescript
+// src/features/users/api/route.ts
+import { Hono } from 'hono'
+import { zValidator } from '@hono/zod-validator'
+import { createUserSchema } from '../schemas'
+import { UserService } from './service'
+
+const users = new Hono()
+const userService = new UserService()
+
+users.post('/', zValidator('json', createUserSchema), async (c) => {
+  const data = await c.req.json()
+  const user = await userService.createUser(data)
+  return c.json(user, 201)
+})
+
+export default users
+```
+
+```typescript
+// src/features/users/components/UserForm.tsx
+'use client'
+
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { createUserSchema, CreateUserDto } from '../schemas'
+
+export const UserForm = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm<CreateUserDto>({
+    resolver: zodResolver(createUserSchema)
+  })
+
+  const onSubmit = async (data: CreateUserDto) => {
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      
+      if (!response.ok) throw new Error('Failed to create user')
+      
+      // Handle success
+    } catch (error) {
+      // Handle error
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div>
+        <label htmlFor="name">Name</label>
+        <input
+          id="name"
+          {...register('name')}
+        />
+        {errors.name && (
+          <span className="error">{errors.name.message}</span>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          {...register('email')}
+        />
+        {errors.email && (
+          <span className="error">{errors.email.message}</span>
+        )}
+      </div>
+
+      <button type="submit">Create User</button>
+    </form>
+  )
+}
+```
+
+We can also create a custom hook for user creation:
+
+```typescript
+// src/features/users/hooks.ts
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { CreateUserDto } from './schemas'
+
+export const useCreateUser = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (data: CreateUserDto) => {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create user')
+      }
+
+      return response.json()
+    },
+    onSuccess: () => {
+      // Invalidate and refetch users query
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+    }
+  })
+}
+
+// Updated UserForm using the hook
+export const UserForm = () => {
+  const { mutate: createUser, isLoading } = useCreateUser()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm<CreateUserDto>({
+    resolver: zodResolver(createUserSchema)
+  })
+
+  const onSubmit = (data: CreateUserDto) => {
+    createUser(data)
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      {/* ... form fields ... */}
+      <button type="submit" disabled={isLoading}>
+        {isLoading ? 'Creating...' : 'Create User'}
+      </button>
+    </form>
+  )
+}
+```
+
+You can also create utility functions for schema validation:
+
+```typescript
+// src/features/users/utils.ts
+import { createUserSchema, CreateUserDto } from './schemas'
+
+export const validateCreateUser = (data: unknown): {
+  success: boolean;
+  data?: CreateUserDto;
+  error?: string;
+} => {
+  try {
+    const validated = createUserSchema.parse(data)
+    return { success: true, data: validated }
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message }
+    }
+    return { success: false, error: 'Validation failed' }
+  }
+}
+```
+
+This approach provides several benefits:
+
+1. Single source of truth for validation rules
+2. Type safety throughout the application
+3. Consistent validation between frontend and backend
+4. Reusable validation logic
+5. Better developer experience with TypeScript autocompletion
+6. Runtime type safety with Zod
+
