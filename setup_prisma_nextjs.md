@@ -92,8 +92,9 @@ Choose the options that suit your needs (e.g., TypeScript, App Router, etc.). Fo
     "db:generate": "prisma generate",
     "db:push": "prisma db push"
    ```
-   **after all schema change run both, without "db:generate" 
+   **after all schema change run both, without "db:generate" prisma client will not get new schema**
 
+   **Production**
    This syncs your database with the schema without generating migrations (useful for prototyping). For production, use migrations:
    ```bash
    npx prisma migrate dev --name init
