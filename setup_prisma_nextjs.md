@@ -81,7 +81,7 @@ Choose the options that suit your needs (e.g., TypeScript, App Router, etc.). Fo
    ```
 
 3. **Sync the Database**:
-   Run the following command to create the database tables based on your schema:
+   Run the following command to create the database tables based on your schema:  This syncs your database with the schema without generating migrations (useful for prototyping). 
    ```bash
    npx prisma db push
    ```
@@ -94,8 +94,8 @@ Choose the options that suit your needs (e.g., TypeScript, App Router, etc.). Fo
    ```
    **after all schema change run both, without "db:generate" prisma client will not get new schema**
 
-   **Production**
-   This syncs your database with the schema without generating migrations (useful for prototyping). For production, use migrations:
+   **Production**: 
+  For production, use migrations:
    ```bash
    npx prisma migrate dev --name init
    ```
