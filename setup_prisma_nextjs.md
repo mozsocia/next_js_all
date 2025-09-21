@@ -92,6 +92,7 @@ Choose the options that suit your needs (e.g., TypeScript, App Router, etc.). Fo
     "db:generate": "prisma generate",
     "db:push": "prisma db push"
    ```
+   **after all schema change run both, without "db:generate" 
 
    This syncs your database with the schema without generating migrations (useful for prototyping). For production, use migrations:
    ```bash
